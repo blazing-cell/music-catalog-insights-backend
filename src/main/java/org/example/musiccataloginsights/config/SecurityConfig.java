@@ -96,7 +96,7 @@ public class SecurityConfig {
                 "http://localhost:3000",
 
                 // Production Vercel frontend
-                "https://music-catalog-insights-frontend-aggaih0lz.vercel.app"
+                "https://music-catalog-insights-frontend.vercel.app"
         ));
 
         configuration.setAllowedMethods(
