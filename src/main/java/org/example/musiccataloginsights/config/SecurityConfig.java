@@ -92,11 +92,9 @@ public class SecurityConfig {
                 new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
-                // Local development
                 "http://localhost:3000",
-
-                // Production Vercel frontend
-                "https://music-catalog-insights-frontend.vercel.app"
+                "https://music-catalog-insights-frontend.vercel.app",
+                "https://music-catalog-insights-frontend-47jon6sew.vercel.app"
         ));
 
         configuration.setAllowedMethods(
