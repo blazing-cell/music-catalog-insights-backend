@@ -79,10 +79,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(
-                List.of("http://localhost:3000")
-        );
-
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",
+                "https://music-catalog-insights-frontend-m3tpnow3g.vercel.app"
+        ));
         configuration.setAllowedMethods(
                 List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")
         );
