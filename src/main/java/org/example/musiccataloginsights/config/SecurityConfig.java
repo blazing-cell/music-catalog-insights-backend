@@ -88,41 +88,44 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
-        CorsConfiguration configuration =
-                new CorsConfiguration();
+        CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(List.of(
+                // Local development
                 "http://localhost:3000",
+
+                // Vercel production domain
                 "https://music-catalog-insights-frontend.vercel.app",
-                "https://music-catalog-insights-frontend-47jon6sew.vercel.app"
+
+                // Vercel main branch domain
+                "https://music-catalog-insights-frontend-git-main-blazing-cells-projects.vercel.app",
+
+                // Vercel deployment domain
+                "https://music-catalog-insights-frontend-gi5m3xept.vercel.app"
         ));
 
-        configuration.setAllowedMethods(
-                List.of(
-                        "GET",
-                        "POST",
-                        "PUT",
-                        "DELETE",
-                        "OPTIONS"
-                )
-        );
+        configuration.setAllowedMethods(List.of(
+                "GET",
+                "POST",
+                "PUT",
+                "DELETE",
+                "OPTIONS"
+        ));
 
-        configuration.setAllowedHeaders(
-                List.of("*")
-        );
+        configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration(
-                "/**",
-                configuration
-        );
+        source.registerCorsConfiguration("/**", configuration);
 
         return source;
+
+
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
