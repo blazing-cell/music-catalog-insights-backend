@@ -3,6 +3,7 @@ package org.example.musiccataloginsights.config;
 import org.example.musiccataloginsights.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -37,6 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+                // Disable CSRF because this application uses JWT authentication
                 .csrf(csrf -> csrf.disable())
 
                 // Enable CORS
@@ -48,6 +50,9 @@ public class SecurityConfig {
                 )
 
                 .authorizeHttpRequests(auth -> auth
+
+                        // Allow CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         // Public APIs
                         .requestMatchers(
@@ -62,9 +67,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                // Authentication provider
                 .authenticationProvider(authenticationProvider())
 
-                // JWT filter runs before Spring Security's username/password filter
+                // JWT filter runs before UsernamePasswordAuthenticationFilter
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
@@ -90,12 +96,13 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
+        // Allow local development and Vercel deployments
         configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-                "https://music-catalog-insights-frontend.vercel.app",
-                "https://music-catalog-insights-frontend-*.vercel.app"
+                "https://*.vercel.app"
         ));
 
+        // Allowed HTTP methods
         configuration.setAllowedMethods(List.of(
                 "GET",
                 "POST",
@@ -104,18 +111,27 @@ public class SecurityConfig {
                 "OPTIONS"
         ));
 
+        // Allow all request headers
         configuration.setAllowedHeaders(List.of("*"));
 
+        // Allow Authorization header to be exposed to the frontend
+        configuration.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        // Allow credentials
         configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
 
         return source;
     }
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {

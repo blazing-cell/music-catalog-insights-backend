@@ -1,4 +1,4 @@
- package org.example.musiccataloginsights.security;
+package org.example.musiccataloginsights.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -18,19 +18,16 @@ import java.io.IOException;
 public class JwtAuthenticationFilter
         extends OncePerRequestFilter {
 
-    private final JwtService jwtService;
 
+    private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
             CustomUserDetailsService userDetailsService
     ) {
-
         this.jwtService = jwtService;
-
-        this.userDetailsService =
-                userDetailsService;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -39,6 +36,22 @@ public class JwtAuthenticationFilter
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+
+        /*
+         * CORS preflight requests are OPTIONS requests.
+         *
+         * They do not contain a JWT token.
+         * Therefore, we must allow them to continue immediately.
+         */
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
+            return;
+        }
 
         String authHeader =
                 request.getHeader("Authorization");
@@ -55,7 +68,13 @@ public class JwtAuthenticationFilter
                         + (authHeader != null)
         );
 
-        // No Authorization header
+        /*
+         * If there is no Authorization header,
+         * continue the request normally.
+         *
+         * Public endpoints such as /users/login
+         * do not have a JWT yet.
+         */
         if (
                 authHeader == null
                         || !authHeader.startsWith("Bearer ")
@@ -73,12 +92,21 @@ public class JwtAuthenticationFilter
             return;
         }
 
+        /*
+         * Extract JWT token.
+         *
+         * "Bearer abc123"
+         * becomes
+         * "abc123"
+         */
         String token =
                 authHeader.substring(7);
 
         try {
 
-            // Extract email from JWT
+            /*
+             * Extract email/username from JWT.
+             */
             String email =
                     jwtService.extractUsername(token);
 
@@ -87,7 +115,12 @@ public class JwtAuthenticationFilter
                             + email
             );
 
-            // Authenticate only if no authentication exists
+            /*
+             * Authenticate only if:
+             *
+             * 1. Email was successfully extracted.
+             * 2. No authentication already exists.
+             */
             if (
                     email != null
                             && SecurityContextHolder
@@ -95,7 +128,9 @@ public class JwtAuthenticationFilter
                             .getAuthentication() == null
             ) {
 
-                // Load user using email
+                /*
+                 * Load user from database.
+                 */
                 UserDetails userDetails =
                         userDetailsService
                                 .loadUserByUsername(email);
@@ -105,7 +140,9 @@ public class JwtAuthenticationFilter
                                 + userDetails.getUsername()
                 );
 
-                // Validate token
+                /*
+                 * Validate JWT against the user.
+                 */
                 boolean valid =
                         jwtService.isTokenValid(
                                 token,
@@ -119,6 +156,9 @@ public class JwtAuthenticationFilter
 
                 if (valid) {
 
+                    /*
+                     * Create authenticated user.
+                     */
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     userDetails,
@@ -126,12 +166,17 @@ public class JwtAuthenticationFilter
                                     userDetails.getAuthorities()
                             );
 
+                    /*
+                     * Attach request details.
+                     */
                     authentication.setDetails(
                             new WebAuthenticationDetailsSource()
                                     .buildDetails(request)
                     );
 
-                    // Set authenticated user
+                    /*
+                     * Store authentication in Spring Security context.
+                     */
                     SecurityContextHolder
                             .getContext()
                             .setAuthentication(
@@ -148,25 +193,30 @@ public class JwtAuthenticationFilter
                             "JWT Filter - Token is invalid"
                     );
                 }
-
             }
 
         } catch (Exception e) {
 
+            /*
+             * If JWT processing fails,
+             * clear the security context.
+             */
             System.out.println(
                     "JWT Filter - Authentication failed: "
                             + e.getMessage()
             );
 
-            e.printStackTrace();
-
             SecurityContextHolder.clearContext();
         }
 
+        /*
+         * Continue to the next filter/controller.
+         */
         filterChain.doFilter(
                 request,
                 response
         );
     }
-}
 
+
+}
