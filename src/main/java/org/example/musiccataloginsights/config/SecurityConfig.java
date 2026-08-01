@@ -90,18 +90,10 @@ public class SecurityConfig {
 
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(List.of(
-                // Local development
+        configuration.setAllowedOriginPatterns(List.of(
                 "http://localhost:3000",
-
-                // Vercel production domain
                 "https://music-catalog-insights-frontend.vercel.app",
-
-                // Vercel main branch domain
-                "https://music-catalog-insights-frontend-git-main-blazing-cells-projects.vercel.app",
-
-                // Vercel deployment domain
-                "https://music-catalog-insights-frontend-gi5m3xept.vercel.app"
+                "https://music-catalog-insights-frontend-*.vercel.app"
         ));
 
         configuration.setAllowedMethods(List.of(
@@ -122,8 +114,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
-
-
     }
 
 
